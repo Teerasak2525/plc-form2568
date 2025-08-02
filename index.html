@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบฟอร์มบันทึกข้อมูล PLC (อัปเดตเทมเพลต PDF)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f7fafc; }
+        .form-container { max-width: 56rem; margin: 2rem auto; background: white; padding: 2.5rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .tab-button { transition: all 0.3s; }
+        .tab-button.active { border-color: #3B82F6; background-color: #3B82F6; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        /* --- UPDATED STYLES FOR THE NEW PDF TEMPLATE --- */
+        .output-page { font-family: 'Sarabun', sans-serif; width: 210mm; min-height: 297mm; padding: 15mm; background: white; color: black; position: absolute; left: -9999px; top: 0; box-sizing: border-box; font-size: 11pt; }
+        .output-page .header { text-align: center; font-weight: bold; font-size: 12pt; line-height: 1.6; display: flex; align-items: center; justify-content: center; }
+        .output-page .header svg { height: 50px; width: 50px; margin-right: 15px; }
+        .output-page .main-table, .output-page .main-table th, .output-page .main-table td { border: 1px solid black; border-collapse: collapse; }
+        .output-page .main-table td { padding: 4pt 6pt; vertical-align: top; }
+        .output-page .td-header { vertical-align: middle; font-weight: bold; }
+        .output-page .content-cell { white-space: pre-wrap; word-wrap: break-word; min-height: 3em; }
+        .output-page .signature-section { margin-top: 2rem; padding: 0 1rem; display: flex; justify-content: space-around; text-align: center; line-height: 1.8; }
+        .output-page .signature-block p { margin: 0; }
+        #output-page-2 { text-align: center; }
+        #output-page-2 img { max-width: 80mm; max-height: 110mm; margin: 5px; display: inline-block; border: 1px solid #ccc; object-fit: contain; }
+        .loader { border: 8px solid #f3f3f3; border-radius: 50%; border-top: 8px solid #3498db; width: 60px; height: 60px; animation: spin 2s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="max-w-5xl mx-auto p-4">
+        <!-- Tab Navigation -->
+        <div class="mb-6 flex justify-center border-b">
+            <button data-tab="form" class="tab-button active text-lg font-semibold py-3 px-6 border-b-4">📝 แบบฟอร์ม</button>
+            <button data-tab="dashboard" class="tab-button text-lg font-semibold py-3 px-6 border-b-4 border-transparent">📊 แดชบอร์ด</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="form-tab" class="tab-content active">
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+                <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">แบบฟอร์มบันทึกข้อมูล PLC</h1>
+                <form id="plc-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label for="school-name" class="font-semibold">โรงเรียน:</label><input type="text" id="school-name" value="" class="w-full mt-1 p-2 border rounded-md"></div>
+                        <div><label for="office-name" class="font-semibold">สำนักงานเขตพื้นที่การศึกษา:</label><input type="text" id="office-name" value="" class="w-full mt-1 p-2 border rounded-md"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label for="plc-level" class="font-semibold">ระดับชั้น/กลุ่มสาระการเรียนรู้/หน่วยงาน:</label><input type="text" id="plc-level" value="" class="w-full mt-1 p-2 border rounded-md"></div>
+                        <div><label for="plc-number" class="font-semibold">ครั้งที่:</label><input type="text" id="plc-number" value="" class="w-full mt-1 p-2 border rounded-md"></div>
+                    </div>
+                    <fieldset class="border p-4 rounded-lg">
+                        <legend class="font-bold text-lg px-2 text-gray-700">ข้อมูลการประชุม</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="plc-date" class="font-bold">วัน/เดือน/ปี</label><input type="date" id="plc-date" class="w-full mt-1 p-2 border rounded-md"></div>
+                            <div><label for="plc-location" class="font-bold">สถานที่</label><input type="text" id="plc-location" value="" class="w-full mt-1 p-2 border rounded-md"></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div><label for="plc-time-start" class="font-bold">เวลาเริ่ม</label><input type="time" id="plc-time-start" class="w-full mt-1 p-2 border rounded-md"></div>
+                            <div><label for="plc-time-end" class="font-bold">เวลาสิ้นสุด</label><input type="time" id="plc-time-end" class="w-full mt-1 p-2 border rounded-md"></div>
+                            <div><label for="plc-hours" class="font-bold">จำนวน ชั่วโมง</label><input type="text" id="plc-hours" placeholder="คำนวณอัตโนมัติ" readonly class="w-full mt-1 p-2 border rounded-md bg-gray-100"></div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="border p-4 rounded-lg">
+                        <legend class="font-bold text-lg px-2 text-gray-700">สมาชิก และ หัวหน้ากลุ่ม</legend>
+                        <div class="mb-4"><label for="plc-leader" class="font-bold">หัวหน้ากลุ่ม PLC:</label><input type="text" id="plc-leader" value="" placeholder="ชื่อ-สกุล หัวหน้ากลุ่ม" class="w-full md:w-1-2 mt-1 p-2 border rounded-md"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                            <input type="text" id="member-1" placeholder="1. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-2" placeholder="2. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-3" placeholder="3. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-4" placeholder="4. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-5" placeholder="5. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-6" placeholder="6. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-7" placeholder="7. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-8" placeholder="8. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-9" placeholder="9. สมาชิก" class="p-2 border rounded-md"><input type="text" id="member-10" placeholder="10. สมาชิก" class="p-2 border rounded-md">
+                        </div>
+                    </fieldset>
+                    <div class="space-y-4">
+                        <div><label for="topic" class="font-bold text-gray-700">เรื่องที่ต้องการพัฒนา/ปัญหาที่พบ :</label><textarea id="topic" rows="2" class="w-full mt-1 p-2 border rounded-md"></textarea></div>
+                        <div><label for="reason" class="font-bold text-gray-700">เหตุผลที่พัฒนา/สาเหตุของปัญหา :</label><textarea id="reason" rows="2" class="w-full mt-1 p-2 border rounded-md"></textarea></div>
+                        <div><label for="solution" class="font-bold text-gray-700">แนวทางพัฒนา/แก้ไข :</label><textarea id="solution" rows="2" class="w-full mt-1 p-2 border rounded-md"></textarea></div>
+                        <div><label for="tools" class="font-bold text-gray-700">เครื่องมือ/วิธีการพัฒนา/ปัญหา :</label><textarea id="tools" rows="2" class="w-full mt-1 p-2 border rounded-md"></textarea></div>
+                        <div><label for="results" class="font-bold text-gray-700">ผลที่ได้จากการพัฒนา/แก้ไข :</label><textarea id="results" rows="4" class="w-full mt-1 p-2 border rounded-md"></textarea></div>
+                    </div>
+                    <fieldset class="border p-4 rounded-lg">
+                        <legend class="font-bold text-lg px-2 text-gray-700">รูปภาพประกอบ (ไม่เกิน 2 รูป)</legend>
+                        <label for="image-upload" class="block mb-2 text-sm font-medium text-gray-900">อัปโหลดรูปภาพ:</label>
+                        <input type="file" id="image-upload" multiple accept="image/*" class="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none">
+                        <div id="image-preview" class="mt-4 grid grid-cols-2 gap-4"></div>
+                    </fieldset>
+                     <fieldset class="border p-4 rounded-lg">
+                        <legend class="font-bold text-lg px-2 text-gray-700">ผู้ลงนาม</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
+                            <div><label for="recorder-name" class="font-bold">ผู้บันทึก</label><input type="text" id="recorder-name" placeholder="ชื่อ-สกุล ผู้บันทึก" class="w-full mt-1 p-2 border rounded-md"></div>
+                            <div>
+                                <label for="approver-name" class="font-bold">ผู้รับรอง</label>
+                                <input type="text" id="approver-name" value="" placeholder="ชื่อ-สกุล ผู้รับรอง" class="w-full mt-1 p-2 border rounded-md">
+                                <label for="approver-title" class="font-bold mt-2 inline-block">ตำแหน่งผู้รับรอง</label>
+                                <input type="text" id="approver-title" value="" placeholder="ตำแหน่ง" class="w-full mt-1 p-2 border rounded-md">
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 border-t mt-6">
+                        <button type="button" id="submit-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-md">🚀 ส่งข้อมูลและดาวน์โหลด PDF</button>
+                        <button type="button" id="clear-data" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-md">🗑️ ล้างข้อมูล</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="dashboard-tab" class="tab-content">
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800">แดชบอร์ดข้อมูล PLC</h1>
+                    <button id="refresh-dashboard" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">🔄 รีเฟรช</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="py-3 px-4 text-left">วันที่บันทึก</th>
+                                <th class="py-3 px-4 text-left">โรงเรียน</th>
+                                <th class="py-3 px-4 text-left">ครั้งที่</th>
+                                <th class="py-3 px-4 text-left">ระดับชั้น/กลุ่มสาระ</th>
+                                <th class="py-3 px-4 text-left">ผู้บันทึก</th>
+                                <th class="py-3 px-4 text-center">ไฟล์ PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-tbody"></tbody>
+                    </table>
+                    <div id="dashboard-loader" class="text-center py-10 hidden"><div class="loader mx-auto"></div><p class="mt-4">กำลังโหลดข้อมูล...</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50"><div class="relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 p-8 bg-white rounded-lg shadow-xl text-center"><div class="loader mx-auto"></div><p id="loading-text" class="mt-4 text-lg font-semibold">กำลังส่งข้อมูล...</p></div></div>
+    
+    <!-- --- UPDATED: Hidden container for the new PDF template --- -->
+    <div id="output-page-1" class="output-page">
+        <div class="header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <div>
+                <strong>บันทึกการมีส่วนร่วมชุมชนการเรียนรู้ทางวิชาชีพ (Professional Learning Community : PLC)</strong><br>
+                <span id="output-school-name"></span> <span id="output-office-name"></span>
+            </div>
+        </div>
+        <table class="main-table" style="width: 100%; margin-top: 1rem;">
+            <tbody>
+                <tr><td colspan="4" class="td-header" style="text-align: left;"><strong>ระดับชั้น/กลุ่มสาระการเรียนรู้/หน่วยงาน :</strong> <span id="output-plc-level" style="font-weight: normal;"></span></td></tr>
+                <tr><td class="td-header" style="width: 25%; border-right: none;">รายงาน PLC ครั้งที่ :</td><td id="output-plc-number" style="width: 25%; border-left: none;"></td><td class="td-header" style="width: 25%; border-right: none;">วัน/เดือน/ปี :</td><td id="output-plc-date" style="width: 25%; border-left: none;"></td></tr>
+                <tr><td class="td-header" style="border-right: none;">เวลาที่เริ่ม - สิ้นสุด :</td><td id="output-plc-time" style="border-left: none;"></td><td class="td-header" style="border-right: none;">จำนวนชั่วโมง :</td><td id="output-plc-hours" style="border-left: none;"></td></tr>
+                <tr><td class="td-header" style="border-right: none;">สถานที่ PLC :</td><td colspan="3" id="output-plc-location" style="border-left: none;"></td></tr>
+                <tr><td class="td-header" style="border-right: none;">หัวหน้ากลุ่ม PLC :</td><td colspan="3" id="output-plc-leader" style="border-left: none;"></td></tr>
+                <tr>
+                    <td colspan="4" style="padding: 0;">
+                        <table style="width: 100%; border-collapse: collapse; border: none;">
+                            <tbody>
+                                <tr>
+                                    <td class="td-header" colspan="2" style="text-align: left; border: none; padding: 4pt 6pt;">ผู้ร่วมสมาชิก PLC :</td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 50%; padding: 4pt 6pt; border: none; vertical-align: top;"><div id="output-members-col1"></div></td>
+                                    <td style="width: 50%; padding: 4pt 6pt; border: none; vertical-align: top;"><div id="output-members-col2"></div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr><td colspan="4" class="content-cell"><strong>เรื่องที่ต้องการพัฒนา/ปัญหาที่พบ :</strong><br><span id="output-topic"></span></td></tr>
+                <tr><td colspan="4" class="content-cell"><strong>เหตุผลที่พัฒนา/สาเหตุของปัญหา :</strong><br><span id="output-reason"></span></td></tr>
+                <tr><td colspan="4" class="content-cell"><strong>แนวทางพัฒนา/แก้ไข :</strong><br><span id="output-solution"></span></td></tr>
+                <tr><td colspan="4" class="content-cell"><strong>เครื่องมือ/วิธีการพัฒนา/ปัญหา :</strong><br><span id="output-tools"></span></td></tr>
+                <tr><td colspan="4" class="content-cell" style="min-height: 6em;"><strong>ผลที่ได้จากการพัฒนา/แก้ไข :</strong><br><span id="output-results"></span></td></tr>
+                <tr>
+                    <td colspan="2" style="text-align: center; height: 10em; vertical-align: middle; padding: 5px;">
+                        <img id="output-image-1" src="" alt="รูปภาพ 1" style="max-width: 100%; max-height: 10em; object-fit: contain; display: none;">
+                    </td>
+                    <td colspan="2" style="text-align: center; height: 10em; vertical-align: middle; padding: 5px;">
+                        <img id="output-image-2" src="" alt="รูปภาพ 2" style="max-width: 100%; max-height: 10em; object-fit: contain; display: none;">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="signature-section">
+            <div class="signature-block"><p>ลงชื่อ...........................................ผู้บันทึก</p><p>( <span id="output-recorder-name">&nbsp;</span> )</p></div>
+            <div class="signature-block"><p>ลงชื่อ...........................................ผู้รับรอง</p><p>( <span id="output-approver-name">&nbsp;</span> )</p><p id="output-approver-title"></p></div>
+        </div>
+    </div>
+    
+    <!-- This second page is now removed as images are on the first page -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5WKHnFq6Y_xVWwjrHwGhaSpUO3cGL8mk9HYocHdyYQhGClLzdDXCLd4IX4cXz8pGJKA/exec";
+            
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const form = document.getElementById('plc-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const clearDataBtn = document.getElementById('clear-data');
+            const loadingModal = document.getElementById('loading-modal');
+            const loadingText = document.getElementById('loading-text');
+            const timeStartInput = document.getElementById('plc-time-start');
+            const timeEndInput = document.getElementById('plc-time-end');
+            const hoursInput = document.getElementById('plc-hours');
+            const imageUpload = document.getElementById('image-upload');
+            const imagePreview = document.getElementById('image-preview');
+            const dashboardTbody = document.getElementById('dashboard-tbody');
+            const refreshDashboardBtn = document.getElementById('refresh-dashboard');
+            const dashboardLoader = document.getElementById('dashboard-loader');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const tabName = button.dataset.tab;
+                    tabContents.forEach(content => {
+                        content.classList.toggle('active', content.id === `${tabName}-tab`);
+                    });
+                    if (tabName === 'dashboard') fetchDashboardData();
+                });
+            });
+
+            async function fetchDashboardData() {
+                dashboardLoader.classList.remove('hidden');
+                dashboardTbody.innerHTML = '';
+                try {
+                    const response = await fetch(SCRIPT_URL);
+                    const result = await response.json();
+                    if (result.status === 'success') renderDashboard(result.data);
+                    else throw new Error(result.message);
+                } catch (error) {
+                    dashboardTbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}</td></tr>`;
+                } finally {
+                    dashboardLoader.classList.add('hidden');
+                }
+            }
+
+            function renderDashboard(data) {
+                if (data.length === 0) {
+                    dashboardTbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">ยังไม่มีข้อมูล</td></tr>';
+                    return;
+                }
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b hover:bg-gray-50';
+                    tr.innerHTML = `
+                        <td class="py-3 px-4">${row['Timestamp'] || ''}</td>
+                        <td class="py-3 px-4">${row['โรงเรียน'] || ''}</td>
+                        <td class="py-3 px-4">${row['ครั้งที่'] || ''}</td>
+                        <td class="py-3 px-4">${row['ระดับชั้น/กลุ่มสาระ'] || ''}</td>
+                        <td class="py-3 px-4">${row['ผู้บันทึก'] || ''}</td>
+                        <td class="py-3 px-4 text-center">
+                            <a href="${row['ลิงก์ PDF']}" target="_blank" class="text-blue-500 hover:underline" ${!row['ลิงก์ PDF'] || row['ลิงก์ PDF'] === 'ไม่มีไฟล์' ? 'style="pointer-events:none; color:grey;"' : ''}>เปิดไฟล์</a>
+                        </td>
+                    `;
+                    dashboardTbody.appendChild(tr);
+                });
+            }
+
+            refreshDashboardBtn.addEventListener('click', fetchDashboardData);
+            
+            clearDataBtn.addEventListener('click', () => {
+                if(confirm('คุณต้องการล้างข้อมูลในฟอร์มทั้งหมดใช่หรือไม่?')) {
+                    form.reset();
+                    imagePreview.innerHTML = '';
+                }
+            });
+
+            imageUpload.addEventListener('change', (event) => {
+                const files = event.target.files;
+                if (files.length > 2) {
+                    alert('กรุณาอัปโหลดรูปภาพไม่เกิน 2 รูป');
+                    imageUpload.value = ''; // Clear the selection
+                    imagePreview.innerHTML = '';
+                    return;
+                }
+
+                imagePreview.innerHTML = '';
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'w-full h-auto object-cover rounded-lg border';
+                        imagePreview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            function calculateDuration() {
+                const startTime = timeStartInput.value;
+                const endTime = timeEndInput.value;
+                if (!startTime || !endTime) { hoursInput.value = ''; return; }
+                const start = new Date(`1970-01-01T${startTime}`);
+                const end = new Date(`1970-01-01T${endTime}`);
+                if (end <= start) { hoursInput.value = ''; return; }
+                const diffMs = end - start;
+                const totalMinutes = Math.floor(diffMs / 60000);
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                let durationString = '';
+                if (hours > 0) durationString += `${hours} ชั่วโมง`;
+                if (minutes > 0) { if (durationString) durationString += ' '; durationString += `${minutes} นาที`; }
+                hoursInput.value = durationString;
+            }
+
+            timeStartInput.addEventListener('input', calculateDuration);
+            timeEndInput.addEventListener('input', calculateDuration);
+
+            function populateOutputData() {
+                // Populate Page 1
+                document.getElementById('output-school-name').textContent = document.getElementById('school-name').value;
+                document.getElementById('output-office-name').textContent = document.getElementById('office-name').value;
+                document.getElementById('output-plc-level').textContent = document.getElementById('plc-level').value;
+                document.getElementById('output-plc-number').textContent = document.getElementById('plc-number').value;
+                const dateValue = document.getElementById('plc-date').value;
+                if (dateValue) {
+                    const date = new Date(dateValue);
+                    document.getElementById('output-plc-date').textContent = `${date.getDate()} ${date.toLocaleString('th-TH', { month: 'long' })} ${date.getFullYear() + 543}`;
+                } else { document.getElementById('output-plc-date').innerHTML = '&nbsp;'; }
+                const startTime = document.getElementById('plc-time-start').value;
+                const endTime = document.getElementById('plc-time-end').value;
+                document.getElementById('output-plc-time').textContent = startTime && endTime ? `${startTime} - ${endTime}` : '';
+                document.getElementById('output-plc-hours').textContent = document.getElementById('plc-hours').value;
+                document.getElementById('output-plc-location').textContent = document.getElementById('plc-location').value;
+                document.getElementById('output-plc-leader').textContent = document.getElementById('plc-leader').value;
+                document.getElementById('output-topic').textContent = document.getElementById('topic').value;
+                document.getElementById('output-reason').textContent = document.getElementById('reason').value;
+                document.getElementById('output-solution').textContent = document.getElementById('solution').value;
+                document.getElementById('output-tools').textContent = document.getElementById('tools').value;
+                document.getElementById('output-results').textContent = document.getElementById('results').value;
+                document.getElementById('output-recorder-name').textContent = document.getElementById('recorder-name').value;
+                document.getElementById('output-approver-name').textContent = document.getElementById('approver-name').value;
+                document.getElementById('output-approver-title').textContent = document.getElementById('approver-title').value;
+                const col1 = document.getElementById('output-members-col1');
+                const col2 = document.getElementById('output-members-col2');
+                col1.innerHTML = '';
+                col2.innerHTML = '';
+                for (let i = 1; i <= 10; i++) {
+                    const memberName = document.getElementById(`member-${i}`).value;
+                    const div = document.createElement('div');
+                    div.style.display = 'flex';
+                    div.style.alignItems = 'baseline';
+                    div.style.lineHeight = '2';
+                    const numberSpan = document.createElement('span');
+                    numberSpan.style.width = '2em';
+                    numberSpan.style.flexShrink = '0';
+                    numberSpan.textContent = `${i}.`;
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = (memberName ? memberName.replace(/^\d+\.\s*/, '') : '');
+                    div.appendChild(numberSpan);
+                    div.appendChild(nameSpan);
+                    if (i <= 5) { col1.appendChild(div); } 
+                    else { 
+                        numberSpan.textContent = `${i}.`;
+                        col2.appendChild(div); 
+                    }
+                }
+                
+                // --- MODIFIED: Populate images on Page 1 ---
+                const img1 = document.getElementById('output-image-1');
+                const img2 = document.getElementById('output-image-2');
+                const previewImages = imagePreview.getElementsByTagName('img');
+                
+                img1.src = '';
+                img1.style.display = 'none';
+                img2.src = '';
+                img2.style.display = 'none';
+
+                if (previewImages[0]) {
+                    img1.src = previewImages[0].src;
+                    img1.style.display = 'inline-block';
+                }
+                if (previewImages[1]) {
+                    img2.src = previewImages[1].src;
+                    img2.style.display = 'inline-block';
+                }
+            }
+            
+            const toBase64 = file => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+
+            submitBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                loadingModal.classList.remove('hidden');
+                try {
+                    loadingText.textContent = 'กำลังเตรียมข้อมูล...';
+                    populateOutputData();
+
+                    loadingText.textContent = 'กำลังสร้างไฟล์ PDF...';
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const page1Canvas = await html2canvas(document.getElementById('output-page-1'), { scale: 2, useCORS: true });
+                    const page1ImgData = page1Canvas.toDataURL('image/png');
+                    const page1ImgProps = pdf.getImageProperties(page1ImgData);
+                    const page1ImgRatio = page1ImgProps.width / page1ImgProps.height;
+                    pdf.addImage(page1ImgData, 'PNG', 0, 0, pdfWidth, pdfWidth / page1ImgRatio);
+                    
+                    const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+                    loadingText.textContent = 'กำลังประมวลผลรูปภาพ...';
+                    const imagesData = await Promise.all(Array.from(imageUpload.files).map(async file => {
+                        const base64 = await toBase64(file);
+                        return { name: file.name, mimeType: file.type, data: base64 };
+                    }));
+
+                    const members = [];
+                    for (let i = 1; i <= 10; i++) members.push(document.getElementById(`member-${i}`).value || '');
+                    
+                    const formData = {
+                        schoolName: document.getElementById('school-name').value,
+                        officeName: document.getElementById('office-name').value,
+                        plcLevel: document.getElementById('plc-level').value,
+                        plcNumber: document.getElementById('plc-number').value,
+                        plcDate: document.getElementById('plc-date').value,
+                        plcTime: `${document.getElementById('plc-time-start').value} - ${document.getElementById('plc-time-end').value}`,
+                        plcHours: document.getElementById('plc-hours').value,
+                        plcLocation: document.getElementById('plc-location').value,
+                        plcLeader: document.getElementById('plc-leader').value,
+                        members: members,
+                        topic: document.getElementById('topic').value,
+                        reason: document.getElementById('reason').value,
+                        solution: document.getElementById('solution').value,
+                        tools: document.getElementById('tools').value,
+                        results: document.getElementById('results').value,
+                        recorderName: document.getElementById('recorder-name').value,
+                        approverName: document.getElementById('approver-name').value,
+                        approverTitle: document.getElementById('approver-title').value,
+                        pdfFile: { name: `plc-record-${document.getElementById('plc-number').value || 'data'}.pdf`, data: pdfBase64 },
+                        images: imagesData
+                    };
+
+                    loadingText.textContent = 'กำลังส่งข้อมูลไปยัง Google Drive...';
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        alert('บันทึกข้อมูลสำเร็จ!');
+                        pdf.save(`plc-record-${document.getElementById('plc-number').value || 'data'}.pdf`);
+                        form.reset();
+                        imagePreview.innerHTML = '';
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    console.error("Error submitting form:", error);
+                    let userMessage = `เกิดข้อผิดพลาดในการส่งข้อมูล: ${error.message}\n\n`;
+                    if (error.message.includes("Failed to fetch")) {
+                        userMessage += "ปัญหานี้มักเกิดจากการตั้งค่าสิทธิ์ของ Google Apps Script ไม่ถูกต้อง กรุณาตรวจสอบว่าคุณได้ Deploy สคริปต์โดยตั้งค่า 'Who has access' เป็น 'Anyone' (ทุกคน) แล้วลองอีกครั้ง";
+                    }
+                    alert(userMessage);
+                } finally {
+                    loadingModal.classList.add('hidden');
+                }
+            });
+
+            // Initial load for dashboard
+            fetchDashboardData();
+        });
+    </script>
+</body>
+</html>
