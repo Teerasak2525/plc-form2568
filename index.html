@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบฟอร์มบันทึกข้อมูล PLC (อัปเดตเทมเพลต PDF)</title>
+    <title>แบบฟอร์มบันทึกข้อมูล PLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -47,10 +47,6 @@
             <div class="bg-white p-8 rounded-lg shadow-lg">
                 <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">แบบฟอร์มบันทึกข้อมูล PLC</h1>
                 <form id="plc-form" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label for="school-name" class="font-semibold">โรงเรียน:</label><input type="text" id="school-name" value="" class="w-full mt-1 p-2 border rounded-md"></div>
-                        <div><label for="office-name" class="font-semibold">สำนักงานเขตพื้นที่การศึกษา:</label><input type="text" id="office-name" value="" class="w-full mt-1 p-2 border rounded-md"></div>
-                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label for="plc-level" class="font-semibold">ระดับชั้น/กลุ่มสาระการเรียนรู้/หน่วยงาน:</label><input type="text" id="plc-level" value="" class="w-full mt-1 p-2 border rounded-md"></div>
                         <div><label for="plc-number" class="font-semibold">ครั้งที่:</label><input type="text" id="plc-number" value="" class="w-full mt-1 p-2 border rounded-md"></div>
@@ -142,7 +138,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             <div>
                 <strong>บันทึกการมีส่วนร่วมชุมชนการเรียนรู้ทางวิชาชีพ (Professional Learning Community : PLC)</strong><br>
-                <span id="output-school-name"></span> <span id="output-office-name"></span>
+                <strong>โรงเรียนชุมชนมาบอำมฤต  สำนักงานเขตพื้นที่การศึกษาประถมศึกษาชุมพร เขต 1</strong>
             </div>
         </div>
         <table class="main-table" style="width: 100%; margin-top: 1rem;">
@@ -312,8 +308,6 @@
 
             function populateOutputData() {
                 // Populate Page 1
-                document.getElementById('output-school-name').textContent = document.getElementById('school-name').value;
-                document.getElementById('output-office-name').textContent = document.getElementById('office-name').value;
                 document.getElementById('output-plc-level').textContent = document.getElementById('plc-level').value;
                 document.getElementById('output-plc-number').textContent = document.getElementById('plc-number').value;
                 const dateValue = document.getElementById('plc-date').value;
@@ -416,8 +410,6 @@
                     for (let i = 1; i <= 10; i++) members.push(document.getElementById(`member-${i}`).value || '');
                     
                     const formData = {
-                        schoolName: document.getElementById('school-name').value,
-                        officeName: document.getElementById('office-name').value,
                         plcLevel: document.getElementById('plc-level').value,
                         plcNumber: document.getElementById('plc-number').value,
                         plcDate: document.getElementById('plc-date').value,
@@ -473,5 +465,6 @@
     </script>
 </body>
 </html>
+
 
 
